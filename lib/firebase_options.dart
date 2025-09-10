@@ -17,29 +17,17 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -58,6 +46,44 @@ class DefaultFirebaseOptions {
     messagingSenderId: '579486454887',
     projectId: 'one-meal-day',
     storageBucket: 'one-meal-day.firebasestorage.app',
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyBc8dTPqY0QLA87b8OCha4kYcMn9Hr0gJw',
+    appId: '1:579486454887:web:b49afb1609640c37bd30c2',
+    messagingSenderId: '579486454887',
+    projectId: 'one-meal-day',
+    authDomain: 'one-meal-day.firebaseapp.com',
+    storageBucket: 'one-meal-day.firebasestorage.app',
+    measurementId: 'G-2CL7BVV1D8',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyAuFZ_aN3QqLeBsFy3KOsMSG3et39CfFgQ',
+    appId: '1:579486454887:ios:d12ffa0cab228396bd30c2',
+    messagingSenderId: '579486454887',
+    projectId: 'one-meal-day',
+    storageBucket: 'one-meal-day.firebasestorage.app',
+    iosBundleId: 'com.example.onemealaday2323',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyAuFZ_aN3QqLeBsFy3KOsMSG3et39CfFgQ',
+    appId: '1:579486454887:ios:d12ffa0cab228396bd30c2',
+    messagingSenderId: '579486454887',
+    projectId: 'one-meal-day',
+    storageBucket: 'one-meal-day.firebasestorage.app',
+    iosBundleId: 'com.example.onemealaday2323',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyBc8dTPqY0QLA87b8OCha4kYcMn9Hr0gJw',
+    appId: '1:579486454887:web:d4a60e244ed2c9efbd30c2',
+    messagingSenderId: '579486454887',
+    projectId: 'one-meal-day',
+    authDomain: 'one-meal-day.firebaseapp.com',
+    storageBucket: 'one-meal-day.firebasestorage.app',
+    measurementId: 'G-KKT1T3W5QG',
   );
 
 }
