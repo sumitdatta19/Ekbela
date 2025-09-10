@@ -1,56 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'upload_screen.dart';
 import 'meal_detail_screen.dart';
 import 'profile_screen.dart';
+import '../firestore_service.dart';
+import '../post.dart';
 
-// ✅ Food data
-const List<Map<String, String>> foods = [
-  {
-    "title": "pasta",
-    "location": "Chrn ago, IL",
-    "time": "1 hr ago",
-    "image": "https://images.unsplash.com/photo-1562967914-608f82629710",
-  },
-  {
-    "title": "Salad",
-    "location": "Chrn ago, IL",
-    "time": "1 hr ago",
-    "image": "https://images.unsplash.com/photo-1562967914-608f82629710",
-  },
-  {
-    "title": "chicken",
-    "location": "Chrn ago, IL",
-    "time": "1 hr ago",
-    "image": "https://images.unsplash.com/photo-1562967914-608f82629710",
-  },
-  {
-    "title": "Salad",
-    "location": "Chrn ago, IL",
-    "time": "1 hr ago",
-    "image": "https://images.unsplash.com/photo-1562967914-608f82629710",
-  },
-  {
-    "title": "biryani",
-    "location": "Chrn ago, IL",
-    "time": "1 hr ago",
-    "image": "https://images.unsplash.com/photo-1562967914-608f82629710",
-  },
-  {
-    "title": "Salad",
-    "location": "Chrn ago, IL",
-    "time": "1 hr ago",
-    "image": "https://images.unsplash.com/photo-1562967914-608f82629710",
-  },
-  {
-    "title": "Salad",
-    "location": "Chrn ago, IL",
-    "time": "1 hr ago",
-    "image": "https://images.unsplash.com/photo-1562967914-608f82629710",
-  },
-];
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key}); // ✅ const constructor
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final FirestoreService _firestoreService = FirestoreService();
+  final user = FirebaseAuth.instance.currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +28,7 @@ class HomeScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // ✅ Search bar
+          // Search bar
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: TextField(
@@ -78,115 +43,139 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          // ✅ Food list
+          // Food list
           Expanded(
-            child: ListView.builder(
-              itemCount: foods.length,
-              itemBuilder: (context, index) {
-                final food = foods[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  child: Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: SizedBox(
-                      width: double.infinity, // ✅ Make card stretch full width
-                      child: Padding(
-                        padding: const EdgeInsets.all(
-                          8.0,
-                        ), // ✅ Add spacing inside
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            // Food image
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                food["image"]!,
-                                width: 70,
-                                height: 70,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // Food details
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    food["title"]!,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
+            child: StreamBuilder<List<Post>>(
+              stream: _firestoreService.getPosts(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text("No meals available right now."));
+                }
+
+                final posts = snapshot.data!;
+
+                return ListView.builder(
+                  itemCount: posts.length,
+                  itemBuilder: (context, index) {
+                    final post = posts[index];
+                    final isClaimed = post.claimedBy != null;
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Food image
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    "https://images.unsplash.com/photo-1562967914-608f82629710", // Placeholder
+                                    width: 70,
+                                    height: 70,
+                                    fit: BoxFit.cover,
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    food["location"]!,
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    food["time"]!,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Claim button
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => MealDetailScreen(
-                                      title: food["title"]!,
-                                      location: food["location"]!,
-                                      time: food["time"]!,
-                                      imageUrl: food["image"]!,
-                                    ),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
                                 ),
-                              ),
-                              child: const Text("Claim"),
+                                const SizedBox(width: 12),
+                                // Food details
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        post.foodName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        post.location,
+                                        style: const TextStyle(fontSize: 13),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        post.availability,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Claim button
+                                ElevatedButton(
+                                  onPressed: isClaimed
+                                      ? null
+                                      : () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => MealDetailScreen(
+                                                postId: post.id,
+                                                title: post.foodName,
+                                                location: post.location,
+                                                time: post.availability,
+                                                imageUrl: "https://images.unsplash.com/photo-1562967914-608f82629710", // Placeholder
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isClaimed ? Colors.grey : Colors.green,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                  ),
+                                  child: Text(isClaimed ? "Claimed" : "Claim"),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 );
               },
             ),
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const UploadScreen()),
+          );
+        },
+        backgroundColor: Colors.blue,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         selectedItemColor: Colors.blue,
         onTap: (index) {
-          if (index == 1) {
-            // middle button
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const UploadScreen()),
-            );
-          } else if (index == 2) {
+          if (index == 2) {
             // third button (profile)
             Navigator.push(
               context,

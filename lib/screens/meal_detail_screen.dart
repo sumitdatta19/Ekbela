@@ -1,6 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../firestore_service.dart';
 
-class MealDetailScreen extends StatelessWidget {
+class MealDetailScreen extends StatefulWidget {
+  final String postId;
   final String title;
   final String location;
   final String time;
@@ -8,6 +11,7 @@ class MealDetailScreen extends StatelessWidget {
 
   const MealDetailScreen({
     super.key,
+    required this.postId,
     required this.title,
     required this.location,
     required this.time,
@@ -15,10 +19,19 @@ class MealDetailScreen extends StatelessWidget {
   });
 
   @override
+  State<MealDetailScreen> createState() => _MealDetailScreenState();
+}
+
+class _MealDetailScreenState extends State<MealDetailScreen> {
+  bool _isClaimed = false;
+  final FirestoreService _firestoreService = FirestoreService();
+  final user = FirebaseAuth.instance.currentUser;
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        title: Text(widget.title),
         backgroundColor: Colors.blue,
         centerTitle: true,
       ),
@@ -33,7 +46,7 @@ class MealDetailScreen extends StatelessWidget {
                 bottomRight: Radius.circular(20),
               ),
               child: Image.network(
-                imageUrl,
+                widget.imageUrl,
                 width: double.infinity,
                 height: 220,
                 fit: BoxFit.cover,
@@ -47,7 +60,7 @@ class MealDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    widget.title,
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -62,7 +75,7 @@ class MealDetailScreen extends StatelessWidget {
                         size: 18,
                       ),
                       const SizedBox(width: 4),
-                      Text(location, style: const TextStyle(fontSize: 14)),
+                      Text(widget.location, style: const TextStyle(fontSize: 14)),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -74,7 +87,7 @@ class MealDetailScreen extends StatelessWidget {
                         size: 18,
                       ),
                       const SizedBox(width: 4),
-                      Text(time, style: const TextStyle(fontSize: 14)),
+                      Text(widget.time, style: const TextStyle(fontSize: 14)),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -98,19 +111,45 @@ class MealDetailScreen extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // TODO: Add claim confirmation logic
-                  },
+                  onPressed: _isClaimed
+                      ? null
+                      : () async {
+                          try {
+                            await _firestoreService.claimPost(
+                                widget.postId, user!.uid);
+                            setState(() {
+                              _isClaimed = true;
+                            });
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Meal claimed successfully!'),
+                                ),
+                              );
+                              Navigator.pop(context);
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      'Error claiming meal: ${e.toString()}'),
+                                ),
+                              );
+                            }
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: _isClaimed ? Colors.grey : Colors.green,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    "Confirm Claim",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  child: Text(
+                    _isClaimed ? "Claimed" : "Confirm Claim",
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
